@@ -49,6 +49,9 @@ public interface Constants {
         String KAFKA_ENABLE = "kafka.enable";
 
         @ConfigKey
+        String EXTERNAL_LINKS_DISABLE = "external-links.disable";
+
+        @ConfigKey
         String KAFKA_LISTENERS = "kafka.listeners";
 
         @ConfigKey

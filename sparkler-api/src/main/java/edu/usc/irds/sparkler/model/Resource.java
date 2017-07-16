@@ -134,4 +134,8 @@ public class Resource implements Serializable {
     public String getDedupeId() { return dedupeId; }
 
     public void setDedupeId(String dedupeId) { this.dedupeId = dedupeId; }
+
+    public String getHostname(){
+        return hostname;
+    }
 }

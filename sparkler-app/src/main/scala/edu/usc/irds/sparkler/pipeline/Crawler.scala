@@ -18,10 +18,12 @@
 package edu.usc.irds.sparkler.pipeline
 
 
+import java.net.URL
+
 import edu.usc.irds.sparkler.{Constants, CrawlDbRDD, SparklerConfiguration}
 import edu.usc.irds.sparkler.base.{CliTool, Loggable}
 import edu.usc.irds.sparkler.model.ResourceStatus._
-import edu.usc.irds.sparkler.model.{ResourceStatus, CrawlData, Resource, SparklerJob}
+import edu.usc.irds.sparkler.model.{CrawlData, Resource, ResourceStatus, SparklerJob}
 import edu.usc.irds.sparkler.solr.{SolrStatusUpdate, SolrUpsert}
 import edu.usc.irds.sparkler.util.JobUtil
 import org.apache.hadoop.conf.Configuration
@@ -64,6 +66,10 @@ class Crawler extends CliTool {
   @Option(name = "-ke", aliases = Array("--kafka-enable"),
     usage = "Enable Kafka, default is false i.e. disabled")
   var kafkaEnable: Boolean = sparklerConf.get(Constants.key.KAFKA_ENABLE).asInstanceOf[Boolean]
+
+  @Option(name = "-eld", aliases = Array("--external-links-disable"),
+    usage = "Disable external links")
+  var disableExternalLinks = sparklerConf.get(Constants.key.EXTERNAL_LINKS_DISABLE).asInstanceOf[Boolean]
 
   @Option(name = "-kls", aliases = Array("--kafka-listeners"),
     usage = "Kafka Listeners, default is localhost:9092")
@@ -155,7 +161,8 @@ class Crawler extends CliTool {
       sc.runJob(statusUpdateRdd, statusUpdateFunc)
 
       //Step: Filter Outlinks and Upsert new URLs into CrawlDb
-      val outlinksRdd = OutLinkUpsert(job, fetchedRdd)
+
+      val outlinksRdd = OutLinkUpsert(job, fetchedRdd, disableExternalLinks)
       val upsertFunc = new SolrUpsert(job)
       sc.runJob(outlinksRdd, upsertFunc)
 
@@ -174,16 +181,26 @@ class Crawler extends CliTool {
   }
 }
 
-object OutLinkUpsert extends ((SparklerJob, RDD[CrawlData]) => RDD[Resource]) with Serializable with Loggable {
-  override def apply(job: SparklerJob, rdd: RDD[CrawlData]): RDD[Resource] = {
 
-    //Step : UPSERT outlinks
-    rdd.flatMap({ data => for (u <- data.parsedData.outlinks) yield (u, data.fetchedData.getResource) }) //expand the set
+object OutLinkUpsert extends ((SparklerJob, RDD[CrawlData],Boolean) => RDD[Resource]) with Serializable with Loggable {
 
-      .reduceByKey({ case (r1, r2) => if (r1.getDiscoverDepth <= r2.getDiscoverDepth) r1 else r2 }) // pick a parent
-      //TODO: url normalize
-      .map({ case (link, parent) => new Resource(link, parent.getDiscoverDepth + 1, job, UNFETCHED,
-      parent.getFetchTimestamp, parent.getId) }) //create a new resource
+  def getHostName(url: String): String = (new URL(url)).getHost
+
+  override def apply(job: SparklerJob, rdd: RDD[CrawlData], disableExternalLinks: Boolean): RDD[Resource]= {
+
+    //Step : UPSERT outlinks,
+    var linksMap = rdd.flatMap({ data => for (u <- data.parsedData.outlinks) yield (u, data.fetchedData.getResource) })
+    if(disableExternalLinks) {
+      linksMap = linksMap.filter(data => getHostName(data._1).equals(data._2.getHostname))
+    }
+    //expand the set
+    linksMap.reduceByKey({ case (r1, r2) => if (r1.getDiscoverDepth <= r2.getDiscoverDepth) r1 else r2 }) // pick a parent
+    //TODO: url normalize
+    .map({ case (link, parent) => new Resource(link, parent.getDiscoverDepth + 1, job, UNFETCHED,
+    parent.getFetchTimestamp, parent.getId) }) //create a new resource
+
+//    System.out.println(rdd)
+
   }
 }
 

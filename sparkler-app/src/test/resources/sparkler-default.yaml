@@ -41,6 +41,12 @@ kafka.listeners: localhost:9092
 # Type: String. Default is "sparkler/<jobid>".
 kafka.topic: sparkler_%s
 
+
+##################### Links Filter Properties ###########################
+# Disable External Links
+# Type: Boolean. Default is "false"
+external-links.disable: true
+
 ##################### Generate Properties ###############################
 
 # Generates the top N URLs for fetching.
