@@ -169,7 +169,7 @@ class Crawler extends CliTool {
       //Step: Store these to nutch segments
       val outputPath = this.outputPath + "/" + taskId
 
-      storeContent(outputPath, fetchedRdd)
+//      storeContent(outputPath, fetchedRdd)
 
       LOG.info("Committing crawldb..")
       solrc.commitCrawlDb()
