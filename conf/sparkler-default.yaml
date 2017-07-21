@@ -77,6 +77,11 @@ fetcher.headers:
 # for every request the agents are used one after the other in sequence
 #fetcher.user.agents: user-agents.txt
 
+##################### Links Filter Properties ###########################
+# Disable External Links
+# Type: Boolean. Default is "false"
+external-links.disable: false
+
 ##################### Plugins ###########################################
 
 # Plugins Bundle directory. Configured through Maven.

@@ -17,13 +17,17 @@
 
 package edu.usc.irds.sparkler.pipeline
 
+import java.net.URL
+
 import edu.usc.irds.sparkler.URLFilter
 import edu.usc.irds.sparkler.base.Loggable
 import edu.usc.irds.sparkler.model._
 import edu.usc.irds.sparkler.service.PluginService
 import org.apache.commons.validator.routines.UrlValidator
+import edu.usc.irds.sparkler.Constants
 
 import scala.language.postfixOps
+import util.control.Breaks._
 
 /**
   * OutLinkFilter Function filters stream of URLs.
@@ -32,19 +36,29 @@ object OutLinkFilterFunction
   extends ((SparklerJob, CrawlData) => Set[String])
     with Serializable with Loggable {
 
+  def getHostName(url: String): String = new URL(url).getHost
+
   override def apply(job: SparklerJob, data: CrawlData)
   : Set[String] = {
     val outLinkFilter: scala.Option[URLFilter] = PluginService.getExtension(classOf[URLFilter], job)
     var filteredOutLinks: Set[String] = Set()
     val urlValidator: UrlValidator = new UrlValidator()
+    val disableExternalLinks = job.config.get(Constants.key.EXTERNAL_LINKS_DISABLE).asInstanceOf[Boolean]
     for (url <- data.parsedData.outlinks) {
       val result = outLinkFilter match {
         case Some(urLFilter) => urlValidator.isValid(url) && urLFilter.filter(url, data.fetchedData.getResource.getUrl)
         case None => true
       }
-      if (result) {
-        filteredOutLinks += url
-      }
+          breakable {
+            if (result) {
+              if(disableExternalLinks){
+                if(!getHostName(url).equals(data.fetchedData.getResource.getHostname)){
+                  break
+                }
+              }
+              filteredOutLinks += url
+            }
+          }
     }
     filteredOutLinks
   }

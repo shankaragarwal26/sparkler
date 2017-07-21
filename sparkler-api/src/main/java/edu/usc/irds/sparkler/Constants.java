@@ -86,6 +86,10 @@ public interface Constants {
 
         @ConfigKey
         String FETCHER_USER_AGENTS = "fetcher.user.agents";
+
+        @ConfigKey
+        String EXTERNAL_LINKS_DISABLE = "external-links.disable";
+
     }
 
 
