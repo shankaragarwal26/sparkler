@@ -147,4 +147,12 @@ object Injector extends Loggable {
     injector.run(args)
     println(s">>jobId = ${injector.jobId}")
   }
+
+  def start(args: Array[String]): String = {
+    val injector = new Injector()
+    injector.run(args)
+    injector.jobId
+  }
+
+
 }
