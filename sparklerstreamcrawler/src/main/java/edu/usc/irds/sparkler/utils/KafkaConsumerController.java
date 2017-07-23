@@ -1,11 +1,10 @@
 package edu.usc.irds.sparkler.utils;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import edu.usc.irds.sparkler.SparklerStreamConfiguration;
 
-import static edu.usc.irds.sparkler.Constants.bootStrapServerName;
+import java.util.*;
+
+import static edu.usc.irds.sparkler.Constants.BOOTSTRAP_SERVER_KEY;
 
 /**
  * Created by shankaragarwal on 21/07/17.
@@ -14,10 +13,15 @@ public class KafkaConsumerController implements KafkaConsumerNotifier {
     private boolean listenToKafka = false;
     private KafkaConsumerHandler consumerHandler;
     private Queue<KConsumer> consumerList;
+    String bootStrapServer;
 
     public KafkaConsumerController(KafkaConsumerHandler consumerHandler){
         this.consumerHandler = consumerHandler;
         consumerList = new LinkedList<KConsumer>();
+        @SuppressWarnings("unchecked") HashMap<String,String>  kafkaConfiguration = (HashMap<String, String>)
+                SparklerStreamConfiguration.getInstance().getValue("kafka");
+        bootStrapServer = kafkaConfiguration.get(BOOTSTRAP_SERVER_KEY);
+
     }
     public void startListenting(String consumerGroup, String topic){
         List<String> topics = new ArrayList<String>();
@@ -25,7 +29,7 @@ public class KafkaConsumerController implements KafkaConsumerNotifier {
 
         KConsumer consumer = new KConsumer(consumerGroup,
                 topics,
-                bootStrapServerName,
+                bootStrapServer,
                 this
         );
 

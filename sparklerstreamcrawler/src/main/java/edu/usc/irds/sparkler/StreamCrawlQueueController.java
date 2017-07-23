@@ -5,6 +5,7 @@ import edu.usc.irds.sparkler.service.Injector;
 import edu.usc.irds.sparkler.utils.KafkaConsumerController;
 import edu.usc.irds.sparkler.utils.KafkaConsumerHandler;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -22,11 +23,17 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
 
     private KafkaConsumerController kafkaConsumerController = null;
 
+    private String consumerGroup;
+    private String topic;
+
 
     private StreamCrawlQueue crawlURLDataQueue;
 
     private StreamCrawlQueueController(){
         kafkaConsumerController = new KafkaConsumerController(this);
+        HashMap<String,String> kafkaConfiguration = (HashMap<String, String>) SparklerStreamConfiguration.getInstance().getValue("kafka");
+        topic = kafkaConfiguration.get(Constants.CONSUMER_TOPIC_NAME_KEY);
+        consumerGroup = kafkaConfiguration.get(Constants.CONSUMER_GROUP_KEY);
 
         crawlURLDataQueue = new StreamCrawlQueue();
 
@@ -36,7 +43,7 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
             }
         }).start();
 
-        kafkaConsumerController.startListenting(CONSUMER_GROUP_ID,CONSUMER_TOPIC_NAME);
+        kafkaConsumerController.startListenting(consumerGroup, topic);
     }
 
     private void getItemsFromQueue() {
@@ -111,7 +118,7 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
             if(crawlURLDataQueue.getSize() >=MAX_QUEUE_SIZE && kafkaConsumerController.isListening())
                 kafkaConsumerController.stopListening();
             else if(crawlURLDataQueue.getSize()< MAX_QUEUE_SIZE && !kafkaConsumerController.isListening())
-                kafkaConsumerController.startListenting(CONSUMER_GROUP_ID,CONSUMER_TOPIC_NAME);
+                kafkaConsumerController.startListenting(consumerGroup, topic);
         }
     }
 

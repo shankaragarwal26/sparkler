@@ -4,10 +4,9 @@ package edu.usc.irds.sparkler;
  * Created by shankaragarwal on 04/07/17.
  */
 public class Constants {
-    static final String CONSUMER_TOPIC_NAME = "inell_sparkler_test";
-//    public static final String bootStrapServerName = "10.24.28.111:6667";
-    public static final String bootStrapServerName = "127.0.0.1:9092";
-    static final String CONSUMER_GROUP_ID = "inell_sparkler_group";
+    static final String CONSUMER_TOPIC_NAME_KEY = "topic-name";
+    public static final String BOOTSTRAP_SERVER_KEY = "bootstrap-server";
+    static final String CONSUMER_GROUP_KEY = "consumer_group_id";
 
     static final int  corePoolSize  =    5;
     static final int  maxPoolSize   =   10;
