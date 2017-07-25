@@ -7,6 +7,7 @@ public class Constants {
     static final String CONSUMER_TOPIC_NAME_KEY = "topic-name";
     public static final String BOOTSTRAP_SERVER_KEY = "bootstrap-server";
     static final String CONSUMER_GROUP_KEY = "consumer_group_id";
+    public static final String SPARKLER_APP_JAR_PATH_KEY = "sparkler-app-jar-path";
 
     static final int  corePoolSize  =    5;
     static final int  maxPoolSize   =   10;

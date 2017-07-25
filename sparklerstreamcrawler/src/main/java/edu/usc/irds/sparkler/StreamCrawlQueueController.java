@@ -5,6 +5,7 @@ import edu.usc.irds.sparkler.service.Injector;
 import edu.usc.irds.sparkler.utils.KafkaConsumerController;
 import edu.usc.irds.sparkler.utils.KafkaConsumerHandler;
 
+import java.io.*;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,16 +23,19 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
     private static StreamCrawlQueueController streamCrawlerURLController = null;
 
     private KafkaConsumerController kafkaConsumerController = null;
+    private String command;
 
     private String consumerGroup;
     private String topic;
 
 
     private StreamCrawlQueue crawlURLDataQueue;
+    private String jarPath = null;
 
     private StreamCrawlQueueController(){
         kafkaConsumerController = new KafkaConsumerController(this);
         HashMap<String,String> kafkaConfiguration = (HashMap<String, String>) SparklerStreamConfiguration.getInstance().getValue("kafka");
+        HashMap<String,String> sparklerConfiguration = (HashMap<String, String>) SparklerStreamConfiguration.getInstance().getValue("sparkler");
         topic = kafkaConfiguration.get(Constants.CONSUMER_TOPIC_NAME_KEY);
         consumerGroup = kafkaConfiguration.get(Constants.CONSUMER_GROUP_KEY);
 
@@ -42,6 +46,10 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
               getItemsFromQueue();
             }
         }).start();
+
+        this.jarPath = sparklerConfiguration.get(SPARKLER_APP_JAR_PATH_KEY);
+        command ="java -jar "+jarPath + " crawl -id %s -i 2";
+
 
         kafkaConsumerController.startListenting(consumerGroup, topic);
     }
@@ -93,13 +101,35 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
 
 
         if(jobId !=null && jobId.length()>0) {
-            args = new String[4];
-            args[0] = "-id";
-            args[1] = jobId;
-            args[2] = "-i";
-            args[3] = "1";
-            Crawler.main(args);
-            System.out.print("Started job "+ jobId);
+            String new_command = String.format(command, jobId);
+            String line;
+            try {
+                System.out.println(new_command);
+                Process p =Runtime.getRuntime().exec(new_command);
+                p.waitFor();
+                InputStream stream = p.getErrorStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+                while((line = reader.readLine())!=null){
+                    System.out.println(line);
+                }
+
+                System.out.println("Output");
+
+                OutputStream outputStream = p.getOutputStream();
+                System.out.println(outputStream.toString());
+
+//                String [] arg = new String [4];
+//                arg[0] = "-id";
+//                arg[1] = jobId;
+//                arg[2] = "-i";
+//                arg[3] = "2";
+//                Crawler.main(arg);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 

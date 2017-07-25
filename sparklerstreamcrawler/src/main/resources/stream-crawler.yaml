@@ -18,3 +18,5 @@ kafka:
   topic-name: inell_sparkler_test
   bootstrap-server: 10.24.28.111:6667
   consumer_group_id: inell_sparkler_group
+sparkler:
+  sparkler-app-jar-path: /Users/shankaragarwal/test/sparkler/sparkler-app/target/sparkler-app-0.1-SNAPSHOT.jar

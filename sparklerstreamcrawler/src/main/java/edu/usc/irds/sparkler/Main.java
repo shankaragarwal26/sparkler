@@ -3,6 +3,8 @@
  */
 package edu.usc.irds.sparkler;
 
+import java.io.File;
+
 public class Main {
     public static void main(String [] args){
         new Thread(new Runnable() {
