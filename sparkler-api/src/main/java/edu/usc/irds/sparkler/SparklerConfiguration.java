@@ -24,11 +24,13 @@ import java.util.Map;
 
 public class SparklerConfiguration extends JSONObject {
 
-    public SparklerConfiguration() {
+    private static SparklerConfiguration configuration;
+
+    private SparklerConfiguration() {
         super();
     }
 
-    public SparklerConfiguration(Map<?, ?> map) {
+    private SparklerConfiguration(Map<?, ?> map) {
         super(map);
     }
 
@@ -43,5 +45,19 @@ public class SparklerConfiguration extends JSONObject {
         } else {
             throw new SparklerException("No plugin configuration found!");
         }
+    }
+
+    public static SparklerConfiguration createConfiguration(){
+        configuration = new SparklerConfiguration();
+        return configuration;
+    }
+
+    public static SparklerConfiguration createConfiguration(Map<?, ?> map){
+        configuration = new SparklerConfiguration(map);
+        return configuration;
+    }
+    public static SparklerConfiguration getInstance()
+    {
+        return configuration;
     }
 }

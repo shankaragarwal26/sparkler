@@ -61,7 +61,6 @@ public class KConsumer {
                         }
                     }
                     catch (WakeupException exp){
-
                     }
                 }
                 notifier.stoppedReadingMessage(currentObject);

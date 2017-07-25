@@ -105,7 +105,7 @@ public interface Constants {
             try {
                 input = Constants.class.getClassLoader().getResourceAsStream(file.SPARKLER_DEFAULT);
                 Map<String,Object> yamlMap = (Map<String, Object>) yaml.load(input);
-                sparklerConf = new SparklerConfiguration(yamlMap);
+                sparklerConf = SparklerConfiguration.createConfiguration(yamlMap);
 
                 //input = Constants.class.getClassLoader().getResourceAsStream(file.SPARKLER_SITE);
                 //if(sparklerSite != null)

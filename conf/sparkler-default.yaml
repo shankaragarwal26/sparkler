@@ -39,13 +39,13 @@ spark.master: local[*]
 ##################### Apache Kafka Properties ###########################
 # Enable Kafka Dump
 # Type: Boolean. Default is "false"
-kafka.enable: false
+kafka.enable: true
 # Kafka Listeners
 # Type: String. Default is "localhost:9092" for local mode.
-kafka.listeners: localhost:9092
+kafka.listeners: 10.24.28.111:6667
 # Kafka topic to send dumps to
 # Type: String. Default is "sparkler/<jobid>".
-kafka.topic: sparkler_%s
+kafka.topic: inell_classifier
 
 ##################### Generate Properties ###############################
 
@@ -80,7 +80,7 @@ fetcher.headers:
 ##################### Links Filter Properties ###########################
 # Disable External Links
 # Type: Boolean. Default is "false"
-external-links.disable: false
+external-links.disable: true
 
 ##################### Plugins ###########################################
 
