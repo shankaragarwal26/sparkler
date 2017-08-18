@@ -126,8 +126,10 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
 //                Crawler.main(arg);
 
             } catch (IOException e) {
+                System.out.println(e);
                 e.printStackTrace();
             } catch (InterruptedException e) {
+                System.out.println(e);
                 e.printStackTrace();
             }
         }

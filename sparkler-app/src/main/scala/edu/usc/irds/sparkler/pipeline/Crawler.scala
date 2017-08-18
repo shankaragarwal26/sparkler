@@ -210,7 +210,9 @@ object Crawler extends Loggable with Serializable{
     rdd.foreachPartition(crawlData_iter => {
       val sparklerProducer = new SparklerProducer(listeners, topic)
       crawlData_iter.foreach(crawlData => {
-        sparklerProducer.send(crawlData.fetchedData.getContent)
+        val text = new String(crawlData.fetchedData.getContent, "UTF-8")
+        val url = (crawlData.fetchedData.getResource.getUrl() + "\n") + text
+        sparklerProducer.send(url.getBytes("UTF-8"))
       })
     })
   }
