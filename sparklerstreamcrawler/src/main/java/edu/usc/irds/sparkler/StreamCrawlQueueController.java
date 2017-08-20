@@ -1,11 +1,13 @@
 package edu.usc.irds.sparkler;
 
-import edu.usc.irds.sparkler.pipeline.Crawler;
 import edu.usc.irds.sparkler.service.Injector;
 import edu.usc.irds.sparkler.utils.KafkaConsumerController;
 import edu.usc.irds.sparkler.utils.KafkaConsumerHandler;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -48,10 +50,11 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
         }).start();
 
         this.jarPath = sparklerConfiguration.get(SPARKLER_APP_JAR_PATH_KEY);
-        command ="java -jar "+jarPath + " crawl -id %s -i 2";
+        command ="java -jar "+jarPath + " crawl -id %s -i 1";
 
 
         kafkaConsumerController.startListenting(consumerGroup, topic);
+        System.out.println("Started Listenining to topic" + topic);
     }
 
     private void getItemsFromQueue() {
@@ -66,24 +69,26 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
                 );
 
         while(true){
-            if(threadPoolExecutor.getActiveCount()>=MAX_THREAD_COUNT) {
-                try {
-                    Thread.sleep(SLEEP_TIME);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            else{
-                final Set<CrawlURLData> seedURLS = new HashSet<CrawlURLData>();
-                while(seedURLS.size()<MAX_BATCH_SIZE && crawlURLDataQueue.getSize()>0) {
-                    CrawlURLData crawlURLData = crawlURLDataQueue.getElement();
-                    seedURLS.add(crawlURLData);
-                }
-                if(seedURLS.size()>0) {
-                    threadPoolExecutor.submit(() -> createASparklerBatch(seedURLS));
-                }
+            synchronized (this) {
+                if (threadPoolExecutor.getActiveCount() < MAX_THREAD_COUNT) {
+                    final Set<CrawlURLData> seedURLS = new HashSet<CrawlURLData>();
+                    while (seedURLS.size() < MAX_BATCH_SIZE && crawlURLDataQueue.getSize() > 0) {
+                        CrawlURLData crawlURLData = crawlURLDataQueue.getElement();
+                        seedURLS.add(crawlURLData);
+                    }
+                    if (seedURLS.size() > 0) {
+                        threadPoolExecutor.submit(() -> createASparklerBatch(seedURLS));
+                    }
 
+                }
             }
+
+            try {
+                Thread.sleep(SLEEP_TIME);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
 
         }
     }
@@ -106,17 +111,25 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
             try {
                 System.out.println(new_command);
                 Process p =Runtime.getRuntime().exec(new_command);
-                p.waitFor();
-                InputStream stream = p.getErrorStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+                InputStream iStream = p.getInputStream();
+
+                long startTime = System.currentTimeMillis();
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(iStream));
                 while((line = reader.readLine())!=null){
                     System.out.println(line);
                 }
 
+                p.waitFor();
+
+                long endTime = System.currentTimeMillis();
+                double diff = (endTime-startTime)/(1000.0*60.0);
+                System.out.print("Took "+ diff + " minutes");
+
                 System.out.println("Output");
 
-                OutputStream outputStream = p.getOutputStream();
-                System.out.println(outputStream.toString());
+//                OutputStream outputStream = p.getOutputStream();
+//                System.out.println(outputStream.toString());
 
 //                String [] arg = new String [4];
 //                arg[0] = "-id";
@@ -125,10 +138,7 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
 //                arg[3] = "2";
 //                Crawler.main(arg);
 
-            } catch (IOException e) {
-                System.out.println(e);
-                e.printStackTrace();
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 System.out.println(e);
                 e.printStackTrace();
             }
@@ -146,16 +156,17 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
     }
 
     private void checkForQueueSize() {
-        synchronized (this){
-            if(crawlURLDataQueue.getSize() >=MAX_QUEUE_SIZE && kafkaConsumerController.isListening())
-                kafkaConsumerController.stopListening();
-            else if(crawlURLDataQueue.getSize()< MAX_QUEUE_SIZE && !kafkaConsumerController.isListening())
-                kafkaConsumerController.startListenting(consumerGroup, topic);
-        }
+//        synchronized (this){
+//            if(crawlURLDataQueue.getSize() >=MAX_QUEUE_SIZE && kafkaConsumerController.isListening())
+//                kafkaConsumerController.stopListening();
+//            else if(crawlURLDataQueue.getSize()< MAX_QUEUE_SIZE && !kafkaConsumerController.isListening())
+//                kafkaConsumerController.startListenting(consumerGroup, topic);
+//        }
     }
 
     public void handleMessage(String urlMessage) {
+        System.out.println("Adding url " + urlMessage);
         crawlURLDataQueue.insertURL(urlMessage);
-        checkForQueueSize();
+//        checkForQueueSize();
     }
 }

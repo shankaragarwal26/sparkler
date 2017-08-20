@@ -147,6 +147,7 @@ class Crawler extends CliTool {
         .persist()
 
       if (kafkaEnable) {
+        LOG.info("Pushing To Kafka " + kafkaTopic)
         storeContentKafka(kafkaListeners, kafkaTopic.format(jobId), fetchedRdd)
       }
 

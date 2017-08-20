@@ -36,23 +36,23 @@ public class KafkaConsumerController implements KafkaConsumerNotifier {
         consumer.startListening();
 
     }
-
-    public void stopListening(){
-        synchronized (consumerList){
-            KConsumer consumer = consumerList.peek();
-            if(consumer !=null)
-                consumer.stopListening();
-        }
-    }
-
-    public boolean isListening() {
-        synchronized (consumerList) {
-            KConsumer consumer = consumerList.peek();
-            if(consumer !=null)
-                return consumer.isListening();
-            return false;
-        }
-    }
+//
+//    public void stopListening(){
+//        synchronized (consumerList){
+//            KConsumer consumer = consumerList.peek();
+//            if(consumer !=null)
+//                consumer.stopListening();
+//        }
+//    }
+//
+//    public boolean isListening() {
+//        synchronized (consumerList) {
+//            KConsumer consumer = consumerList.peek();
+//            if(consumer !=null)
+//                return consumer.isListening();
+//            return false;
+//        }
+//    }
 
     public void readMessage(String message) {
         if(consumerHandler!=null)
