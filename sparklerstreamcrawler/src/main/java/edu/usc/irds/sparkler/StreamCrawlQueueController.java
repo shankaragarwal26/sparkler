@@ -7,10 +7,11 @@ import edu.usc.irds.sparkler.utils.KafkaConsumerHandler;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -22,6 +23,7 @@ import static edu.usc.irds.sparkler.Constants.*;
  */
 public class StreamCrawlQueueController implements KafkaConsumerHandler {
 
+    private static final long TIME_OUT = 10; //10 minute time out for a task
     private static StreamCrawlQueueController streamCrawlerURLController = null;
 
     private KafkaConsumerController kafkaConsumerController = null;
@@ -77,7 +79,20 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
                         seedURLS.add(crawlURLData);
                     }
                     if (seedURLS.size() > 0) {
-                        threadPoolExecutor.submit(() -> createASparklerBatch(seedURLS));
+                        ArrayList<Callable<Integer>> tasks = new ArrayList<>();
+                        tasks.add(new Callable<Integer>() {
+                            @Override
+                            public Integer call() throws Exception {
+                                createASparklerBatch(seedURLS);
+                                return null;
+                            }
+                        });
+                        try {
+                            threadPoolExecutor.invokeAll(tasks,TIME_OUT,TimeUnit.MINUTES);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                            deleteAllFelixCacheFiles();
+                        }
                     }
 
                 }
@@ -87,9 +102,21 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
                 Thread.sleep(SLEEP_TIME);
             } catch (InterruptedException e) {
                 e.printStackTrace();
+
             }
 
 
+        }
+    }
+
+    private void deleteAllFelixCacheFiles() {
+        try {
+            Process p = Runtime.getRuntime().exec("rm -rf ../felix-cache/*");
+            p.waitFor();
+            p = Runtime.getRuntime().exec("rm -rf ../../felix-cache/*");
+            p.waitFor();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -141,6 +168,7 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
             } catch (Exception e) {
                 System.out.println(e);
                 e.printStackTrace();
+                deleteAllFelixCacheFiles();
             }
         }
     }
@@ -165,8 +193,17 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
     }
 
     public void handleMessage(String urlMessage) {
-        System.out.println("Adding url " + urlMessage);
-        crawlURLDataQueue.insertURL(urlMessage);
+        if(urlMessage !=null) {
+            String[] urls = urlMessage.split(";");
+            if(urls.length > 0) {
+                for(String url:urls) {
+                    if(url!=null && url.length()>0) {
+                        System.out.println("Adding url " + url);
+                        crawlURLDataQueue.insertURL(url);
+                    }
+                }
+            }
+        }
 //        checkForQueueSize();
     }
 }

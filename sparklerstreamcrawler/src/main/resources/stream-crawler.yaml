@@ -15,7 +15,7 @@
 
 
 kafka:
-  topic-name: inell_sparkler
+  topic-name: inell_sparkler_3
   bootstrap-server: 10.24.28.111:6667
   consumer_group_id: inell_sparkler_group
 sparkler:
