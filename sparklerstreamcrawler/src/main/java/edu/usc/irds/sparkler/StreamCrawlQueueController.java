@@ -7,10 +7,7 @@ import edu.usc.irds.sparkler.utils.KafkaConsumerHandler;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -35,7 +32,6 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
 
     private StreamCrawlQueue crawlURLDataQueue;
     private String jarPath = null;
-
     private StreamCrawlQueueController(){
         kafkaConsumerController = new KafkaConsumerController(this);
         HashMap<String,String> kafkaConfiguration = (HashMap<String, String>) SparklerStreamConfiguration.getInstance().getValue("kafka");
@@ -137,7 +133,7 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
             String line;
             try {
                 System.out.println(new_command);
-                Process p =Runtime.getRuntime().exec(new_command);
+                final Process p =Runtime.getRuntime().exec(new_command);
                 InputStream iStream = p.getInputStream();
 
                 long startTime = System.currentTimeMillis();
@@ -146,6 +142,19 @@ public class StreamCrawlQueueController implements KafkaConsumerHandler {
                 while((line = reader.readLine())!=null){
                     System.out.println(line);
                 }
+
+                Timer timer = new Timer();
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        try {
+                            p.destroyForcibly();
+                        }
+                        catch (Exception exp){
+
+                        }
+                    }
+                },MINUTES*60*1000);
 
                 p.waitFor();
 

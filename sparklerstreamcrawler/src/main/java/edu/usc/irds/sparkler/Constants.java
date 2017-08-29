@@ -14,8 +14,9 @@ public class Constants {
     static final long keepAliveTime = 5000;
 
 
-    static final int MAX_QUEUE_SIZE = 10000;
     static final int MAX_BATCH_SIZE = 20;
-    static final int MAX_THREAD_COUNT = 10;
+    static final int MAX_THREAD_COUNT = 1;
     static final int SLEEP_TIME = 50000;
+    public static final long MINUTES = 10;
+
 }
