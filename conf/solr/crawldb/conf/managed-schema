@@ -116,8 +116,8 @@
    <!-- Crawl DB Static Fields -->
    <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" docValues="true" /> 
    <field name="url" type="string" indexed="true" stored="true" required="true" multiValued="false" docValues="true" />
-   <field name="group" type="string" indexed="true" stored="true" required="true"  multiValued="false" docValues="true" /> 
-   <field name="score" type="double" indexed="true" stored="true" default="0" multiValued="false" docValues="true" />
+   <field name="group" type="string" indexed="true" stored="true" required="true"  multiValued="false" docValues="true" />
+   <field name="page_score" type="double" indexed="true" stored="true" default="0" multiValued="false" docValues="true" />
 
    <!-- Deprecated Fields -->
    <!-- <field name="jobId" type="string" indexed="true" stored="true" required="true" multiValued="false" docValues="true" /> -->
@@ -149,6 +149,8 @@
 
    <field name="modified_time" type="date" indexed="true" stored="true" multiValued="false" default="NOW" />
    <field name="retries_since_fetch" type="int" indexed="true" stored="true" default="-1" multiValued="false" docValues="true" />
+
+   <field name="response_time" type="long" indexed="true" stored="true" default="0" multiValued="false" docValues="true" />
 
   <!-- Admin -->
   <field name="indexed_at" type="date" indexed="true" stored="true" multiValued="false" default="NOW" />
@@ -239,6 +241,8 @@
 
    <dynamicField name="random_*" type="random" />
 
+   <dynamicField name="*_score" type="double" indexed="true" stored="true" multiValued="false" docValues="true" />
+
    <!-- uncomment the following to ignore any fields that don't already match an existing 
         field name or dynamic field, rather than reporting them as an error. 
         alternately, change the type="ignored" to some other type e.g. "text" if you want 
@@ -249,7 +253,6 @@
       Unless this field is marked with required="false", it will be a required field
    -->
  <uniqueKey>id</uniqueKey>
- <defaultSearchField>text</defaultSearchField>
 
   <!-- copyField commands copy one field to another at the time a document
         is added to the index.  It's used either to index the same field differently,
