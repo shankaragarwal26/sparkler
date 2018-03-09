@@ -187,7 +187,7 @@ class Crawler extends CliTool {
     //Step: Store these to nutch segments
     val outputPath = this.outputPath + "/" + job.currentTask
     //Step : write to FS
-    storeContent(outputPath, rdd)
+//    storeContent(outputPath, rdd)
 
     rdd
   }
